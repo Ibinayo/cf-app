@@ -4,7 +4,7 @@ Description: 'Wild Rydes Infrastructure as Code - Complete Stack including Netwo
 Parameters:
   EnvironmentName:
     Type: String
-    Default: 'ibinayo-wild-rydes'
+    Default: 'ibinayo'
     Description: Environment name prefix for resources
   
   VpcCIDR:
@@ -24,7 +24,7 @@ Parameters:
     
   GitHubConnectionArn:
     Type: String
-    Default: "arn:aws:codeconnections:ca-central-1:769433671483:connection/a24b2e38-f25b-4501-899a-e9c02505245a"
+    Default: "arn:aws:codeconnections:us-east-1:983760593668:connection/98738e15-a8b2-4016-9d76-cd10c150401a"
     Description: ARN of the GitHub CodeStar Connection
     
   GitHubRepo:
@@ -39,7 +39,7 @@ Parameters:
     
   ContainerPort:
     Type: Number
-    Default: 3000
+    Default: 5000
     Description: Port on which the application container listens
     
   DesiredCount:
