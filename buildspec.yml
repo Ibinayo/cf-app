@@ -3,29 +3,29 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY_NAME
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - echo Building the Docker image...
+      - echo Installing Trivy...
+      - apt-get install wget apt-transport-https gnupg
+      - wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
+      - echo deb https://aquasecurity.github.io/trivy-repo/deb bionic main | tee -a /etc/apt/sources.list.d/trivy.list
+      - apt-get update
+      - apt-get install -y trivy
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 983760593668.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
-      - echo Build started on `date`
-      - docker build -t $REPOSITORY_URI:latest .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      - echo Build started on date
+      - echo Building the Docker image...
+      - docker build -t ibinayo-repo .
+      - docker tag ibinayo-repo:latest 983760593668.dkr.ecr.us-east-1.amazonaws.com/ibinayo-repo:latest
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker images...
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing imagedefinitions.json...
-      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$REPOSITORY_URI:$IMAGE_TAG" > imagedefinitions.json
-      - cat imagedefinitions.json
-
+      - echo Build completed on date
+      - echo Running Trivy scan...
+      - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed 983760593668.dkr.ecr.us-east-1.amazonaws.com/ibinayo-repo
+      - echo Pushing the Docker image...
+      - docker push 983760593668.dkr.ecr.us-east-1.amazonaws.com/ibinayo-repo:latest
+      - printf '[{"name":"ibinayo-container","imageUri":"%s"}]' 983760593668.dkr.ecr.us-east-1.amazonaws.com/ibinayo-repo > imagedefinitions.json
 artifacts:
-  files:
-    - imagedefinitions.json
-    - appspec.yaml
-    - taskdef.json
+    files: imagedefinitions.json
